@@ -443,21 +443,26 @@ public function getServerInfo($reset = FALSE) {
 return $this->getDataFromHandler($this->configuration['core'] . '/admin/system', $reset);
 }
 
-/**
-* Prepares the connection to the Solr server.
-*/
-static $solrInstance;
+  /**
+   * Prepares the connection to the Solr server.
+   */
+  protected function connect() {
+    // Check if the connection is already cached.
+    $cacheKey = 'pantheon_solr_connection';
+    if ($cache = $this->cache->get($cacheKey)) {
+      $this->solr = $cache->data;
+    }
 
-protected function connect() {
-  if (self::$solrInstance instanceof SolariumClient) {
-    return self::$solrInstance;
+    if (!$this->solr instanceof SolariumClient) {
+      $config = $this->defaultConfiguration();
+      $this->solr = $this->createClient($config);
+    }
+
+    // Cache the connection.
+    $this->cache->set($cacheKey, $this->solr, CacheBackendInterface::CACHE_PERMANENT);
+
+    return $this->solr;
   }
-
-  $config = $this->defaultConfiguration();
-  self::$solrInstance = $this->createClient($config);
-
-  return self::$solrInstance;
-}
 
 /**
 * @param array $configuration
