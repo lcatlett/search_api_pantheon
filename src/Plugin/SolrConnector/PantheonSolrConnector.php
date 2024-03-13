@@ -8,6 +8,7 @@ use Drupal\Core\Plugin\PluginFormInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginBase;
 use Drupal\search_api_solr\SolrConnectorInterface;
 use Drupal\search_api_pantheon\Services\Endpoint as PantheonEndpoint;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Solarium\Client as SolariumClient;
 use Solarium\Core\Client\Endpoint;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -35,6 +36,14 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
    * @var object|null
    */
   protected $solr;
+
+  /**
+   * A cache backend interface.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cache;
+
 
   /**
    * The PantheonGuzzle service.
@@ -74,6 +83,7 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
         LoggerChannelFactoryInterface $logger_factory,
         PantheonGuzzle $pantheon_guzzle,
         PantheonSolariumClient $solarium_client,
+        CacheBackendInterface $cache,
         DateFormatterInterface $date_formatter,
         MessengerInterface $messenger
     ) {
@@ -82,6 +92,7 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
     $this->solariumClient = $solarium_client;
     $this->dateFormatter = $date_formatter;
     $this->messenger = $messenger;
+    $this->cache = $cache;
     $this->setLogger($logger_factory->get('PantheonSearch'));
     $this->configuration['core'] = self::getPlatformConfig()['core'];
     $this->configuration['schema'] = self::getPlatformConfig()['schema'];
@@ -111,7 +122,8 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
           $container->get('search_api_pantheon.pantheon_guzzle'),
           $container->get('search_api_pantheon.solarium_client'),
           $container->get('date.formatter'),
-          $container->get('messenger')
+          $container->get('messenger'),
+          $container->get('cache.default')
       );
   }
 
@@ -437,11 +449,14 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
    * Prepares the connection to the Solr server.
    */
   protected function connect() {
-    if (!$this->solr instanceof SolariumClient) {
+    static $solrClient;
+
+    if (!$solrClient instanceof SolariumClient) {
       $config = $this->defaultConfiguration();
-      $this->solr = $this->createClient($config);
+      $solrClient = $this->createClient($config);
     }
-    return $this->solr;
+
+    return $solrClient;
   }
 
   /**
