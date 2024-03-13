@@ -5,10 +5,10 @@ namespace Drupal\search_api_pantheon\Plugin\SolrConnector;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\Core\Plugin\PluginFormInterface;
+use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\search_api_solr\SolrConnector\SolrConnectorPluginBase;
 use Drupal\search_api_solr\SolrConnectorInterface;
 use Drupal\search_api_pantheon\Services\Endpoint as PantheonEndpoint;
-use Drupal\Core\Cache\CacheBackendInterface;
 use Solarium\Client as SolariumClient;
 use Solarium\Core\Client\Endpoint;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -38,14 +38,6 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
   protected $solr;
 
   /**
-   * A cache backend interface.
-   *
-   * @var \Drupal\Core\Cache\CacheBackendInterface
-   */
-  protected $cache;
-
-
-  /**
    * The PantheonGuzzle service.
    *
    * @var \Drupal\search_api_pantheon\Services\PantheonGuzzle
@@ -58,6 +50,13 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
    * @var \Drupal\search_api_pantheon\Services\SolariumClient
    */
   protected PantheonSolariumClient $solariumClient;
+
+    /**
+   * A cache backend interface.
+   *
+   * @var \Drupal\Core\Cache\CacheBackendInterface
+   */
+  protected $cache;
 
   /**
    * The date formatter service.
@@ -84,16 +83,13 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
         PantheonGuzzle $pantheon_guzzle,
         PantheonSolariumClient $solarium_client,
         DateFormatterInterface $date_formatter,
-        MessengerInterface $messenger,
-        CacheBackendInterface $cache
-  ) {
+        MessengerInterface $messenger
+    ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->pantheonGuzzle = $pantheon_guzzle;
     $this->solariumClient = $solarium_client;
     $this->dateFormatter = $date_formatter;
     $this->messenger = $messenger;
-    $this->cache = $cache;
-
     $this->setLogger($logger_factory->get('PantheonSearch'));
     $this->configuration['core'] = self::getPlatformConfig()['core'];
     $this->configuration['schema'] = self::getPlatformConfig()['schema'];
@@ -123,8 +119,7 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
           $container->get('search_api_pantheon.pantheon_guzzle'),
           $container->get('search_api_pantheon.solarium_client'),
           $container->get('date.formatter'),
-          $container->get('messenger'),
-          $container->get('cache.default')
+          $container->get('messenger')
       );
   }
 
@@ -450,14 +445,22 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
    * Prepares the connection to the Solr server.
    */
   protected function connect() {
-    static $solrClient;
 
-    if (!$solrClient instanceof SolariumClient) {
-      $config = $this->defaultConfiguration();
-      $solrClient = $this->createClient($config);
+    // Check cache before creating new connection
+    if (!isset($this->cache)) {
+
+      if (!$this->solr instanceof SolariumClient) {
+        $config = $this->defaultConfiguration();
+        $this->solr = $this->createClient($config);
+      }
+
+      // Cache the connection
+      $this->cache = $this->solr;
+
     }
 
-    return $solrClient;
+    return $this->cache;
+
   }
 
   /**
@@ -503,3 +506,4 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
   }
 
 }
+
