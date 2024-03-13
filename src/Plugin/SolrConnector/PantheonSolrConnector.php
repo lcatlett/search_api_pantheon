@@ -448,22 +448,25 @@ return $this->getDataFromHandler($this->configuration['core'] . '/admin/system',
    */
   protected function connect() {
     // Check if the connection is already cached.
-    $cacheKey = 'pantheon_solr_connection';
-    if ($cache = $this->cache->get($cacheKey)) {
-      $this->solr = $cache->data;
+    $cacheKey = 'solr_connection';
+    $cacheBackend = \Drupal::cache('default');
+
+    if ($cacheBackend->get($cacheKey)) {
+      $solr = $cacheBackend->get($cacheKey)->data;
+    } else {
+      $config = $this->defaultConfiguration();
+      $solr = $this->createClient($config);
+
+      // Cache the configuration, not the object.
+      $cacheBackend->set($cacheKey, $config);
     }
 
     if (!$this->solr instanceof SolariumClient) {
-      $config = $this->defaultConfiguration();
-      $this->solr = $this->createClient($config);
+      $this->solr = new SolariumClient($solr);
     }
-
-    // Cache the connection.
-    $this->cache->set($cacheKey, $this->solr, CacheBackendInterface::CACHE_PERMANENT);
 
     return $this->solr;
   }
-
 /**
 * @param array $configuration
 *   Ignored in favor of the default pantheon config.
