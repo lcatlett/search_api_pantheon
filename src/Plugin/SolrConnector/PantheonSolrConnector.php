@@ -83,16 +83,17 @@ class PantheonSolrConnector extends SolrConnectorPluginBase implements
         LoggerChannelFactoryInterface $logger_factory,
         PantheonGuzzle $pantheon_guzzle,
         PantheonSolariumClient $solarium_client,
-        CacheBackendInterface $cache,
         DateFormatterInterface $date_formatter,
-        MessengerInterface $messenger
-    ) {
+        MessengerInterface $messenger,
+        CacheBackendInterface $cache
+  ) {
     parent::__construct($configuration, $plugin_id, $plugin_definition);
     $this->pantheonGuzzle = $pantheon_guzzle;
     $this->solariumClient = $solarium_client;
     $this->dateFormatter = $date_formatter;
     $this->messenger = $messenger;
     $this->cache = $cache;
+
     $this->setLogger($logger_factory->get('PantheonSearch'));
     $this->configuration['core'] = self::getPlatformConfig()['core'];
     $this->configuration['schema'] = self::getPlatformConfig()['schema'];
