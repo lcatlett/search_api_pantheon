@@ -452,7 +452,8 @@ return $this->getDataFromHandler($this->configuration['core'] . '/admin/system',
     $cacheBackend = \Drupal::cache('default');
 
     if ($cacheBackend->get($cacheKey)) {
-      $solr = $cacheBackend->get($cacheKey)->data;
+      $config = $cacheBackend->get($cacheKey)->data;
+      $solr = new SolariumClient($config);
     } else {
       $config = $this->defaultConfiguration();
       $solr = $this->createClient($config);
@@ -462,7 +463,7 @@ return $this->getDataFromHandler($this->configuration['core'] . '/admin/system',
     }
 
     if (!$this->solr instanceof SolariumClient) {
-      $this->solr = new SolariumClient($solr);
+      $this->solr = $solr;
     }
 
     return $this->solr;
