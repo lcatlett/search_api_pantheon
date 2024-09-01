@@ -160,6 +160,7 @@ class Diagnose extends DrushCommands {
       $indexedStats = $this->pantheonGuzzle->getQueryResult('admin/luke', [
             'query' => [
                 'stats' => 'true',
+                'wt' => 'json',
             ],
         ]);
       if ($this->output()->isVerbose()) {
@@ -173,6 +174,7 @@ class Diagnose extends DrushCommands {
       $beans = $this->pantheonGuzzle->getQueryResult('admin/mbeans', [
             'query' => [
                 'stats' => 'true',
+                'wt' => 'json',
             ],
         ]);
       if ($this->output()->isVerbose()) {

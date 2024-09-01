@@ -130,6 +130,7 @@ class TestIndexAndQuery extends DrushCommands {
         'query' => [
           'q' => 'index_id:' . $index->id(),
           'fields' => ['id', 'index_id', 'name'],
+          'wt' => 'json',
         ],
       ]);
       if ($result['response']['numFound'] === 1) {
