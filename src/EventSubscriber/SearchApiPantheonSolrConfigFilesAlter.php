@@ -1,12 +1,11 @@
-<?php declare(strict_types = 1);
+<?php
+
+declare(strict_types = 1);
 
 namespace Drupal\search_api_pantheon\EventSubscriber;
 
 use Drupal\search_api_solr\Event\PostConfigFilesGenerationEvent;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
-use Symfony\Component\HttpKernel\Event\ResponseEvent;
-use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
  * @issue BUGS-4278
@@ -20,7 +19,7 @@ final class SearchApiPantheonSolrConfigFilesAlter implements EventSubscriberInte
   /**
    * PostConfigFilesGenerationEvent event handler.
    *
-   * @param PostConfigFilesGenerationEvent $event
+   * @param \Drupal\search_api_solr\Event\PostConfigFilesGenerationEvent $event
    */
   public function onPostConfigFilesGenerationEvent(PostConfigFilesGenerationEvent $event): void {
     $files = $event->getConfigFiles();
