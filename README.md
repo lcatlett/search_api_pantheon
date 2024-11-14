@@ -71,7 +71,7 @@ composer require 'drupal/search_api_pantheon:8.1.x-dev@dev'
 
 ## Setup
 
-### PLATFORM SUPPORT
+### Platform Support
 
 See [Drupal.org for complete documentation on Search API](https://www.drupal.org/node/1250878).
 To configure the connection with Pantheon, perform the following steps on your Dev environment (or a Multidev):
@@ -122,7 +122,7 @@ If needed, manually reload the core using:
 drush search-api-pantheon:reload
 ```
 
-### USAGE
+### Usage
 
 - **Enable the modules**
 
@@ -262,14 +262,15 @@ If you experience schema reversion issues:
 
 - `drush search-api-pantheon:postSchema [solr-server] [path-to-schema]` (`sapps`) This command will upload schema files to the solr server. It can be used to reset a solr schema to the default Pantheon configuration, upgrade a schema, or to use a custom config set.
 
-The current default schema on Pantheon is the 4.2.1 version of the solr8 jump-start config set provided by the Search API Solr module. To upgrade the default Pantheon solr 8 server to a version 4.3.0+ compatible config set, run the following command:`
+The current default schema on Pantheon when a new Solr container is provisioned is the 4.2.1 version of the solr8 jump-start config set provided by the Search API Solr module. To upgrade the default Pantheon solr 8 server to a version 4.3.0+ compatible config set, run the following command after you've upgraded the Search API Solr module to your desired version.
 
 `drush search-api-pantheon:postSchema pantheon_solr8 /code/web/modules/contrib/search_api_solr/jump-start/solr8/config-set/`
 
-See the [Search API Solr 4.3.0 release notes](https://www.drupal.org/project/search_api_solr/releases/4.3.0) for more information.
+Once you have enabled the Search API Pantheon module, when you reload the schema the Pantheon module will use the config-set for the version of the Search API Solr module installed in your codebase. See the [Search API Solr 4.3.0 release notes](https://www.drupal.org/project/search_api_solr/releases/4.3.0) for more information about upgrading to a 4.3.0+ compatible schema.
 
 - `drush search-api-pantheon:test-index-and-query` (`sap-tiq`) This command will connect to the solr8 server to index a single item and immediately query it.
 
 ## Feedback and Collaboration
 
 Bug reports, feature requests, and feedback should be posted in [the drupal.org issue queue.](https://www.drupal.org/project/issues/search_api_pantheon?categories=All) For code changes, please submit pull requests against the [GitHub repository](https://github.com/pantheon-systems/search_api_pantheon).
+
