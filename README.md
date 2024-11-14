@@ -16,12 +16,19 @@ Users experiencing these issues should upgrade immediately to version 8.1.x-dev.
 
 ## Requirements
 
-| Requirement     | Details                                                                                                                                      |
-| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Drupal Version  | 9.4/10                                                                                                                                       |
-| Hosting         | Pantheon platform                                                                                                                            |
-| Site Management | Composer-based using either: <br> - Pantheon's integrated composer (`build step: true` in pantheon.yml) <br> - CI service (Circle CI/Travis) |
-| Access          | Pantheon Dashboard                                                                                                                           |
+This module is for you if you meet the following requirements:
+
+- Using Drupal 9.4/10
+
+- Hosting the Drupal site on Pantheon's platform
+
+- Your site uses `composer` to install modules and upgrade Drupal core using one of the following integrations:
+
+  - Pantheon's integrated composer (`build step: true` in your pantheon.yml)
+
+  - A Continuous Integration service like Circle CI or Travis
+
+- Have Dashboard access to the platform (necessary to deploy code changes)
 
 ## Intent
 
@@ -31,7 +38,7 @@ Search API Solr provides the ability to connect to any Solr server by providing 
 
 ## What it provides
 
-This module provides [Drupal 9](https://drupal.org) integration with the [Apache Solr project](https://solr.apache.org/guide/8_8/). Pantheon's current version as of the update of this document is 8.8.1.
+This module provides [Drupal 9 and 10](https://drupal.org) integration with the [Apache Solr project](https://solr.apache.org/guide/8_8/). Pantheon's current version as of the update of this document is 8.11.4.
 
 ## Composer
 
@@ -44,7 +51,7 @@ Composer is the way you should be managing your drupal module requirements. This
 - [Search API Solr](https://www.drupal.org/project/search_api_solr). Search API Solr makes search API work with Apache Solr. Composer will manage which version.
 - [Guzzle](https://docs.guzzlephp.org/en/stable/). Guzzle version 6 is standard with Drupal Core `9.x | 10.x` (read 9.x OR 10.x).
 
-## Installation
+## Install
 
 ### Stable Release
 
@@ -64,25 +71,35 @@ composer require 'drupal/search_api_pantheon:8.1.x-dev@dev'
 
 ## Setup
 
-### Platform Support
+### PLATFORM SUPPORT
 
 See [Drupal.org for complete documentation on Search API](https://www.drupal.org/node/1250878).
-
 To configure the connection with Pantheon, perform the following steps on your Dev environment (or a Multidev):
 
-1. **Enable Solr on your Pantheon site**
+- **Enable Solr on your Pantheon site**
 
-- Under "Settings" in your Pantheon site dashboard, enable Solr as an add on.
-- This feature is available for sandbox sites as well as paid plans at the Professional level and above.
+  - Under "Settings" in your Pantheon site dashboard, enable Solr as an add on.
+    This feature is available for sandbox sites as well as paid plans at the
+    Professional level and above.
 
-2. **Enable Solr 8 in your pantheon.yml file**
+- **Enable Solr 8 in your pantheon.yml file**
 
-php_version: 8.1
-database:
-version: 10.4
-drush_version: 10
-search:
-version: 8
+  - Add the bolded portion to your `pantheon.yml` file (** SYNTAX NOT FINAL; Use pantheon internal YGG
+    instructions until yml support is final and available in prod **):
+
+    ```yaml
+    php_version: 8.1
+    database:
+      version: 10.4
+    drush_version: 10
+    search:
+      version: 8
+    ```
+
+    As you promote the code, the `pantheon.yml` file will follow the code through environments
+    enabling the Solr server. However you will need to create an index for each environment
+    and ensure the content is indexed after creation. Indices are specific to the Solr core
+    with/for which they were created. Indices cannot be exported or moved once created.
 
 ### Core Reloading
 
@@ -105,66 +122,113 @@ If needed, manually reload the core using:
 drush search-api-pantheon:reload
 ```
 
-### Usage
+### USAGE
 
-1. **Enable the modules**
+- **Enable the modules**
 
-- Go to `admin/modules` and enable "Search API Pantheon."
-- This will also enable Search API and Search API Solr if not already enabled.
+  - Go to `admin/modules` and enable "Search API Pantheon."
 
-2. **OPTIONAL: Disable Drupal Core's search module**
+  - Doing so will also enable Search API and Search API Solr if they are not already enabled.
 
-- If using Search API, you probably won't need Drupal Core's Search module.
-- Uninstall it at `admin/modules/uninstall`.
+- **OPTIONAL: Disable Drupal Core's search module**
 
-3. **Verify server installation**
+  - If you are using Search API, then you probably will not be using Drupal Core's Search module.
 
-- Navigate to `CONFIG` => `SEARCH & METADATA` => `SEARCH API`
-- Validate that the `PANTHEON SEARCH` server exists and is "enabled".
+  - Uninstall it to save some confusion in the further configuration steps: `admin/modules/uninstall`.
 
-4. **Configure Solr schema**
+- **The module should install a SEARCH API server for you**
 
-- Navigate to `CONFIGURATION` => `SEARCH AND METADATA` => `SEARCH API` => `PANTHEON SEARCH` => `PANTHEON SEARCH ADMIN`
-- Choose "Post Solr Schema"
-- The module will post a schema specific to your site
+  - Navigate in the Drupal interface to `CONFIG` => `SEARCH & METADATA` => `SEARCH API`
 
-### Using the server with an index
+  - Validate that the `PANTHEON SEARCH` server exists and is "enabled".
 
-The following steps are not Pantheon-specific. This module only alters the configuration of Search API servers. To use a server, you next need to create an index.
+- **Solr versions and schemas**
 
-1. Go to `admin/config/search/search-api/add-index`.
-2. Name your index and choose a data source. If this is your first time using Search API, start by selecting "Content" as a data source.
-3. Select "Pantheon" as the server.
-4. Save the index.
-5. Configure fields to be searched under the "fields" tab.
-6. Index the content by clicking "Index now" or running cron.
+  - The version of Solr on Pantheon is Apache Solr 8.8. When you first create
+    your index or alter it significantly, you will need to update the SCHEMA
+    on the server. Do that either with a drush command or in the administration
+    for the Solr Server.
 
-### Searching the Index
+  - Navigate to `CONFIGURATION` => `SEARCH AND METADATA` => `SEARCH API`
+    => `PANTHEON SEARCH` => `PANTHEON SEARCH ADMIN`
 
-1. Create a new view returning `INDEX PANTHEON SOLR8` of type 'ALL'.
-2. Choose fields to include in the results.
-3. Expose keywords for user search.
-4. Sort by the "relevance" field for Solr's relevance rating.
+  - Choose the button labeled "Post Solr Schema".
 
-### Exporting Changes
+  - The module will post a schema specific to your site.
 
-It's a best practice in Drupal 10 to export your changes to `yml` files. Using Terminus while in SFTP mode:
+- **Use the server with an index**
 
-terminus drush PANTHEON_SITE.ENV config:export -y
+  The following steps are not Pantheon-specific. This module only alters the the configuration of Search API servers. To use a server, you next need to create an index.
 
-### Optional Installs
+  - Go to `admin/config/search/search-api/add-index`.
 
-Any of the optional `search_api` modules should work without issue with Pantheon Solr, including but not limited to:
+  - Name your index and choose a data source. If this is your
+    first time using Search API, start by selecting "Content"
+    as a data source. That option will index the articles,
+    basic pages, and other node types you have configured.
 
-- Search API Attachments
-- Search API Facets
-- Search API Autocomplete
-- Search API Spellcheck
-- Search API Ajax
+  - Select "Pantheon" as the server.
+
+  - Save the index.
+
+  - For this index to be usable, you will also need to configure fields to be searched.
+    Select the "fields" tab and `CHOOSE FIELDS TO BE INCLUDED IN THE INDEX`. You may want
+    to index many fields. "Title" is a good field to start with.
+
+  - After adding fields to the configuration, make sure the index is full by clicking
+    "Index now" or by running cron.
+
+- **Search the Index**
+
+  - Create a new view returning `INDEX PANTHEON SOLR8` of type 'ALL'. Don't worry right now how it's sorted, we're
+    going to change that to 'relevance' once we have some data being returned during the search.
+
+  - In the view, `CHOOSE FIELDS TO BE INCLUDED IN THE RESULTS` from the fields you added to your index
+    when you created it. In addition to the fields you added to the index, choose 'relevance' to add
+    to the results.
+
+  - Expose any keywords to the user to change and the view will put a KEYWORDS
+
+  - Once your search is returning results, you can now sort by the "relevance" field and Solr will give the documents
+    a relevance rating. A higher rating means Solr thinks the item is "more relevant" to your search term.
+
+- **Export your changes**
+
+  - It is a best practice in Drupal z to export your changes to `yml` files.
+    Using Terminus while in SFTP mode, you can run `terminus drush [PANTHEON_SITE].[PANTHEON_ENV] -- "config:export -y"`
+    to export the configuration changes you have made. Once committed, these changes
+    can be deployed out to Test and Live environments.
+
+- **OPTIONAL INSTALLS**
+
+  Any of the optional `search_api` modules should work without issue with Pantheon Solr, including but not limited to:
+
+  - Search API Attachments
+
+  - Search API Facets
+
+  - Search API Autocomplete
+
+  - Search API Spellcheck
+
+  - Search API Ajax
 
 ## Pantheon Environments
 
 Each Pantheon environment (Dev, Test, Live, and Multidevs) has its own Solr server. Indexing and searching in one environment does not impact any other environment.
+
+## Solr Jargon
+
+| Term       | Definition                                                                         |
+| ---------- | ---------------------------------------------------------------------------------- |
+| Commit     | To make document changes permanent in the index.                                   |
+| Core       | An instance of the Solr server suitable for creating zero or more indices.         |
+| Collection | Solr Cloud's version of a "CORE". Not currently used at Pantheon.                  |
+| Document   | A group of fields and their values. The basic unit of data in a collection.        |
+| Facet      | The arrangement of search results into categories based on indexed terms.          |
+| Field      | The content to be indexed/searched along with metadata.                            |
+| Index      | A group of metadata entries gathered by Solr into a searchable catalog.            |
+| Schema     | A series of plain text and XML files that describe the data Solr will be indexing. |
 
 ## Troubleshooting
 
@@ -187,22 +251,24 @@ If you experience schema reversion issues:
 
 ### Diagnostic Commands
 
-- `drush search-api-pantheon:diagnose` (`sapd`): Checks various pieces of the Search API install and reports errors.
-- `drush search-api-pantheon:select` (`saps`): Runs the given query against Solr server.
-- `drush search-api-pantheon:force-cleanup` (`sapfc`): Deletes all contents for the given Solr server.
+- `drush search-api-pantheon:diagnose` (`sapd`) The DIAGNOSE command will check the various pieces of the Search API install
+  and throw errors on the pieces that are not working. This command will develop further as the module nears general availability.
 
-## Solr Jargon
+- `drush search-api-pantheon:select` (`saps`) This command will run the given query against Solr server. It's recommended to use
+  `?debug=true` in any Solr page (having the right permissions) to get a good query to pass to this command to debug results.
 
-| Term       | Definition                                                                         |
-| ---------- | ---------------------------------------------------------------------------------- |
-| Commit     | To make document changes permanent in the index.                                   |
-| Core       | An instance of the Solr server suitable for creating zero or more indices.         |
-| Collection | Solr Cloud's version of a "CORE". Not currently used at Pantheon.                  |
-| Document   | A group of fields and their values. The basic unit of data in a collection.        |
-| Facet      | The arrangement of search results into categories based on indexed terms.          |
-| Field      | The content to be indexed/searched along with metadata.                            |
-| Index      | A group of metadata entries gathered by Solr into a searchable catalog.            |
-| Schema     | A series of plain text and XML files that describe the data Solr will be indexing. |
+- `drush search-api-pantheon:force-cleanup` (`sapfc`) This command will delete all of the contents for the given
+  Solr server (no matter if hash or index_id have changed).
+
+- `drush search-api-pantheon:postSchema [solr-server] [path-to-schema]` (`sapps`) This command will upload schema files to the solr server. It can be used to reset a solr schema to the default Pantheon configuration, upgrade a schema, or to use a custom config set.
+
+The current default schema on Pantheon is the 4.2.1 version of the solr8 jump-start config set provided by the Search API Solr module. To upgrade the default Pantheon solr 8 server to a version 4.3.0+ compatible config set, run the following command:`
+
+`drush search-api-pantheon:postSchema pantheon_solr8 /code/web/modules/contrib/search_api_solr/jump-start/solr8/config-set/`
+
+See the [Search API Solr 4.3.0 release notes](https://www.drupal.org/project/search_api_solr/releases/4.3.0) for more information.
+
+- `drush search-api-pantheon:test-index-and-query` (`sap-tiq`) This command will connect to the solr8 server to index a single item and immediately query it.
 
 ## Feedback and Collaboration
 
